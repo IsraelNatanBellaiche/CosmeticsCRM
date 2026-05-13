@@ -2,12 +2,12 @@ from flask import Flask, request, redirect, session, render_template
 import sqlite3
 from datetime import datetime
 import urllib.parse
-import os   # ← נוספה שורה חשובה
+import os
 
 app = Flask(__name__)
 app.secret_key = "crm_secret_key_123"
 
-DB = "crm.db"
+DB = "/tmp/crm.db"
 ADMIN_PASSWORD = "1234"
 
 MICHAL_PHONE = "0547259965"
