@@ -2,6 +2,7 @@ from flask import Flask, request, redirect, session, render_template
 import sqlite3
 from datetime import datetime
 import urllib.parse
+import os   # ← נוספה שורה חשובה
 
 app = Flask(__name__)
 app.secret_key = "crm_secret_key_123"
@@ -78,7 +79,6 @@ def book():
         conn.commit()
         conn.close()
 
-        # וואטסאפ למיכל
         michal_msg = (
             f"תור חדש נקבע:\n"
             f"שם: {name}\n"
@@ -90,7 +90,6 @@ def book():
         )
         michal_link = "https://wa.me/" + normalize_phone(MICHAL_PHONE) + "?text=" + urllib.parse.quote(michal_msg)
 
-        # וואטסאפ ללקוחה
         client_msg = (
             f"היי {name}! התור שלך נקבע בהצלחה ❤️\n"
             f"שירות: {service}\n"
@@ -139,4 +138,5 @@ def logout():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
