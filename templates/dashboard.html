@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-4" style="color:#c2185b;">דשבורד ניהול תורים</h2>
+
+<table class="table table-dark table-striped text-center">
+  <thead>
+    <tr>
+      <th>שם</th>
+      <th>טלפון</th>
+      <th>תאריך</th>
+      <th>שעה</th>
+      <th>שירות</th>
+      <th>הערות</th>
+      <th>נוצר ב־</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for a in appointments %}
+    <tr>
+      <td>{{ a[1] }}</td>
+      <td>{{ a[2] }}</td>
+      <td>{{ a[3] }}</td>
+      <td>{{ a[4] }}</td>
+      <td>{{ a[5] }}</td>
+      <td>{{ a[6] }}</td>
+      <td>{{ a[7] }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<a href="/logout" class="btn btn-outline-light mt-3">התנתקות</a>
+
+{% endblock %}

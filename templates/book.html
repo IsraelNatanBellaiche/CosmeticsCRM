@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-4" style="color:#c2185b;">קביעת תור</h2>
+
+<form method="post">
+  <input class="form-control mb-3" name="name" placeholder="שם מלא">
+  <input class="form-control mb-3" name="phone" placeholder="טלפון">
+
+  <select class="form-control mb-3" name="service">
+    <option>טיפול פנים</option>
+    <option>מיקרובליידינג</option>
+    <option>לק ג׳ל</option>
+    <option>שעווה</option>
+  </select>
+
+  <input class="form-control mb-3" type="date" name="date">
+  <input class="form-control mb-3" type="time" name="time">
+
+  <textarea class="form-control mb-3" name="notes" placeholder="הערות"></textarea>
+
+  <button class="btn btn-main w-100">קבעי תור</button>
+</form>
+
+{% endblock %}

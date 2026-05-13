@@ -1,7 +1,7 @@
-from flask import Flask, request, redirect, session
+from flask import Flask, request, redirect, session, render_template
 import sqlite3
 from datetime import datetime
-import os
+import urllib.parse
 
 app = Flask(__name__)
 app.secret_key = "crm_secret_key_123"
@@ -9,36 +9,134 @@ app.secret_key = "crm_secret_key_123"
 DB = "crm.db"
 ADMIN_PASSWORD = "1234"
 
-# Initialize DB on startup
+MICHAL_PHONE = "0547259965"
+ADDRESS_TEXT = "אידלסון 19"
+ADDRESS_MAP_LINK = "https://www.google.com/maps/search/" + urllib.parse.quote(ADDRESS_TEXT)
+
+
 def init_db():
     conn = sqlite3.connect(DB)
     c = conn.cursor()
 
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS customers (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            phone TEXT,
-            service TEXT,
-            notes TEXT,
-            created_at TEXT
-        )
-    ''')
-
-    c.execute('''
+    c.execute("""
         CREATE TABLE IF NOT EXISTS appointments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            customer_name TEXT,
+            name TEXT,
             phone TEXT,
             date TEXT,
             time TEXT,
             service TEXT,
-            notes TEXT
+            notes TEXT,
+            created_at TEXT
         )
-    ''')
+    """)
 
     conn.commit()
     conn.close()
 
-# 🟢 תריץ את זה כאן — לא בתוך __main__
+
 init_db()
+
+
+def normalize_phone(phone: str) -> str:
+    phone = phone.replace("-", "").replace(" ", "")
+    if phone.startswith("0"):
+        phone = "972" + phone[1:]
+    elif phone.startswith("+"):
+        phone = phone[1:]
+    return phone
+
+
+@app.route("/")
+def landing():
+    return render_template("home.html", title="מיכל בלעיש - קוסמטיקאית")
+
+
+@app.route("/book", methods=["GET", "POST"])
+def book():
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        phone = request.form.get("phone", "").strip()
+        service = request.form.get("service", "").strip()
+        date = request.form.get("date", "").strip()
+        time_ = request.form.get("time", "").strip()
+        notes = request.form.get("notes", "").strip()
+
+        conn = sqlite3.connect(DB)
+        conn.execute("""
+            INSERT INTO appointments(name, phone, date, time, service, notes, created_at)
+            VALUES (?,?,?,?,?,?,?)
+        """, (
+            name,
+            phone,
+            date,
+            time_,
+            service,
+            notes,
+            datetime.now().strftime('%d/%m/%Y %H:%M')
+        ))
+        conn.commit()
+        conn.close()
+
+        # וואטסאפ למיכל
+        michal_msg = (
+            f"תור חדש נקבע:\n"
+            f"שם: {name}\n"
+            f"טלפון: {phone}\n"
+            f"שירות: {service}\n"
+            f"תאריך: {date}\n"
+            f"שעה: {time_}\n"
+            f"הערות: {notes}"
+        )
+        michal_link = "https://wa.me/" + normalize_phone(MICHAL_PHONE) + "?text=" + urllib.parse.quote(michal_msg)
+
+        # וואטסאפ ללקוחה
+        client_msg = (
+            f"היי {name}! התור שלך נקבע בהצלחה ❤️\n"
+            f"שירות: {service}\n"
+            f"תאריך: {date}\n"
+            f"שעה: {time_}\n"
+            f"נתראה!"
+        )
+        client_link = "https://wa.me/" + normalize_phone(phone) + "?text=" + urllib.parse.quote(client_msg)
+
+        return render_template("book_success.html",
+                               name=name,
+                               michal_link=michal_link,
+                               client_link=client_link,
+                               address_link=ADDRESS_MAP_LINK)
+
+    return render_template("book.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        if request.form.get("password") == ADMIN_PASSWORD:
+            session["admin"] = True
+            return redirect("/dashboard")
+        return render_template("login.html", title="כניסה - שגיאה")
+
+    return render_template("login.html", title="כניסה")
+
+
+@app.route("/dashboard")
+def dashboard():
+    if not session.get("admin"):
+        return redirect("/login")
+
+    conn = sqlite3.connect(DB)
+    rows = conn.execute("SELECT * FROM appointments ORDER BY id DESC").fetchall()
+    conn.close()
+
+    return render_template("dashboard.html", appointments=rows)
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
+
+
+if __name__ == "__main__":
+    app.run(debug=True)

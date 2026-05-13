@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="text-center section">
+  <h2>התור נקבע בהצלחה!</h2>
+  <p>תודה {{ name }} 💖</p>
+  <p>מיכל תקבל עכשיו את פרטי התור שלך, ותיצור איתך קשר לאישור.</p>
+
+  <div class="mt-4">
+    <a href="{{ michal_link }}" class="btn btn-main mb-3" target="_blank">
+      שליחת פרטי התור למיכל בוואטסאפ
+    </a>
+    <br>
+    <a href="{{ client_link }}" class="btn btn-main mb-3" target="_blank">
+      שליחת אישור תור ללקוחה בוואטסאפ
+    </a>
+    <br>
+    <a href="{{ address_link }}" class="btn btn-outline-light" target="_blank">
+      ניווט למיקום הקליניקה
+    </a>
+  </div>
+
+  <a href="/" class="btn btn-link mt-4" style="color:#c2185b;">חזרה לדף הבית</a>
+</div>
+{% endblock %}
