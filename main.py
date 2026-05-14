@@ -114,4 +114,53 @@ def book():
             OWNER_URL=OWNER_URL
         )
 
-    return render
+    return render_template("book.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        if request.form.get("password") == ADMIN_PASSWORD:
+            session["admin"] = True
+            return redirect("/dashboard")
+        return render_template("login.html", title="כניסה - שגיאה")
+
+    return render_template("login.html", title="כניסה")
+
+
+@app.route("/dashboard")
+def dashboard():
+    if not session.get("admin"):
+        return redirect("/login")
+
+    conn = sqlite3.connect(DB)
+    rows = conn.execute("SELECT * FROM appointments ORDER BY id DESC").fetchall()
+    conn.close()
+
+    return render_template("dashboard.html", appointments=rows)
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
+
+
+# URLs קבועים
+CLIENT_URL = "https://cosmeticscrm.onrender.com/client"
+OWNER_URL = "https://cosmeticscrm.onrender.com/owner"
+
+
+@app.route("/client")
+def client_page():
+    return render_template("client.html", title="כניסת לקוחה")
+
+
+@app.route("/owner")
+def owner_page():
+    return render_template("owner.html", title="כניסת בעלים")
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
