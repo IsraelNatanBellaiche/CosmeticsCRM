@@ -7,7 +7,12 @@ import os
 app = Flask(__name__)
 app.secret_key = "crm_secret_key_123"
 
-DB = "/tmp/crm.db"
+# Detect environment: Render or Local
+if os.environ.get("RENDER"):
+    DB = "/tmp/crm.db"   # Render environment
+else:
+    DB = "crm.db"        # Local environment
+
 ADMIN_PASSWORD = "1234"
 
 MICHAL_PHONE = "0547259965"
@@ -99,44 +104,14 @@ def book():
         )
         client_link = "https://wa.me/" + normalize_phone(phone) + "?text=" + urllib.parse.quote(client_msg)
 
-        return render_template("book_success.html",
-                               name=name,
-                               michal_link=michal_link,
-                               client_link=client_link,
-                               address_link=ADDRESS_MAP_LINK)
+        return render_template(
+            "book_success.html",
+            name=name,
+            michal_link=michal_link,
+            client_link=client_link,
+            address_link=ADDRESS_MAP_LINK,
+            CLIENT_URL=CLIENT_URL,
+            OWNER_URL=OWNER_URL
+        )
 
-    return render_template("book.html")
-
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        if request.form.get("password") == ADMIN_PASSWORD:
-            session["admin"] = True
-            return redirect("/dashboard")
-        return render_template("login.html", title="כניסה - שגיאה")
-
-    return render_template("login.html", title="כניסה")
-
-
-@app.route("/dashboard")
-def dashboard():
-    if not session.get("admin"):
-        return redirect("/login")
-
-    conn = sqlite3.connect(DB)
-    rows = conn.execute("SELECT * FROM appointments ORDER BY id DESC").fetchall()
-    conn.close()
-
-    return render_template("dashboard.html", appointments=rows)
-
-
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect("/")
-
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    return render

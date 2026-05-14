@@ -1,25 +1,58 @@
-{% extends "base.html" %}
-{% block content %}
+@app.route("/book", methods=["GET", "POST"])
+def book():
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        phone = request.form.get("phone", "").strip()
+        service = request.form.get("service", "").strip()
+        date = request.form.get("date", "").strip()
+        time_ = request.form.get("time", "").strip()
+        notes = request.form.get("notes", "").strip()
 
-<h2 class="mb-4" style="color:#c2185b;">קביעת תור</h2>
+        conn = sqlite3.connect(DB)
+        conn.execute("""
+            INSERT INTO appointments(name, phone, date, time, service, notes, created_at)
+            VALUES (?,?,?,?,?,?,?)
+        """, (
+            name,
+            phone,
+            date,
+            time_,
+            service,
+            notes,
+            datetime.now().strftime('%d/%m/%Y %H:%M')
+        ))
+        conn.commit()
+        conn.close()
 
-<form method="post">
-  <input class="form-control mb-3" name="name" placeholder="שם מלא">
-  <input class="form-control mb-3" name="phone" placeholder="טלפון">
+        michal_msg = (
+            f"תור חדש נקבע:\n"
+            f"שם: {name}\n"
+            f"טלפון: {phone}\n"
+            f"שירות: {service}\n"
+            f"תאריך: {date}\n"
+            f"שעה: {time_}\n"
+            f"הערות: {notes}"
+        )
+        michal_link = "https://wa.me/" + normalize_phone(MICHAL_PHONE) + "?text=" + urllib.parse.quote(michal_msg)
 
-  <select class="form-control mb-3" name="service">
-    <option>טיפול פנים</option>
-    <option>מיקרובליידינג</option>
-    <option>לק ג׳ל</option>
-    <option>שעווה</option>
-  </select>
+        client_msg = (
+            f"היי {name}! התור שלך נקבע בהצלחה ❤️\n"
+            f"שירות: {service}\n"
+            f"תאריך: {date}\n"
+            f"שעה: {time_}\n"
+            f"נתראה!"
+        )
+        client_link = "https://wa.me/" + normalize_phone(phone) + "?text=" + urllib.parse.quote(client_msg)
 
-  <input class="form-control mb-3" type="date" name="date">
-  <input class="form-control mb-3" type="time" name="time">
+        # ⬇️ כאן בדיוק מחזירים את הדף
+        return render_template(
+            "book_success.html",
+            name=name,
+            michal_link=michal_link,
+            client_link=client_link,
+            address_link=ADDRESS_MAP_LINK,
+            CLIENT_URL=CLIENT_URL,
+            OWNER_URL=OWNER_URL
+        )
 
-  <textarea class="form-control mb-3" name="notes" placeholder="הערות"></textarea>
-
-  <button class="btn btn-main w-100">קבעי תור</button>
-</form>
-
-{% endblock %}
+    return render_template("book.html")
